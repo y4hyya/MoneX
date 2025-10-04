@@ -45,9 +45,11 @@ export default function CreatePaymentRequest() {
         })
       }, 1000)
     } else if (timeLeft === 0) {
-      // Payment expired
+      // Payment expired - clear all data
       setQrData(null)
-      setError('Payment request has expired. Please generate a new one.')
+      setMonAmount(null)
+      setRate(null)
+      setError('Payment request has expired. Please enter a new amount and convert again.')
     }
 
     return () => {
@@ -89,6 +91,9 @@ export default function CreatePaymentRequest() {
       const calculatedMonAmount = parseFloat(usdAmount) * rateData.rate
       setMonAmount(calculatedMonAmount)
       
+      // Start countdown when conversion is complete
+      startCountdown()
+      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to convert currency')
     } finally {
@@ -124,7 +129,6 @@ export default function CreatePaymentRequest() {
 
       const qrData: QRData = await response.json()
       setQrData(qrData)
-      startCountdown() // Start the countdown when QR is generated
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate payment link')
@@ -193,9 +197,36 @@ export default function CreatePaymentRequest() {
         {/* Step 2: Conversion Result */}
         {monAmount && rate && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-green-800 mb-2">
-              Conversion Result
-            </h3>
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-lg font-semibold text-green-800">
+                Conversion Result
+              </h3>
+              {timeLeft !== null && timeLeft > 0 && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-green-600 font-medium">Expires in:</span>
+                  <span className={`text-lg font-bold px-3 py-1 rounded ${
+                    timeLeft <= 10 ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    {formatTime(timeLeft)}
+                  </span>
+                </div>
+              )}
+            </div>
+            
+            {/* Expiry Warning in Conversion Section */}
+            {timeLeft !== null && timeLeft <= 10 && timeLeft > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <p className="text-red-800 font-medium text-sm">
+                    Conversion expires in {timeLeft} seconds! Generate payment link quickly or convert again.
+                  </p>
+                </div>
+              </div>
+            )}
+            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div>
                 <span className="text-green-600 font-medium">USD Amount:</span>
