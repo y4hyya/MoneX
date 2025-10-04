@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { QRCodeCanvas } from 'qrcode.react'
+import CreatePaymentRequest from '@/components/CreatePaymentRequest'
 
 
 interface PaymentData {
@@ -139,49 +140,8 @@ export default function MerchantDashboard() {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Payment Request Form */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-                    Create Payment Request
-                  </h2>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Amount (USD)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={amountUSD}
-                        onChange={(e) => setAmountUSD(e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Enter amount in USD"
-                      />
-                    </div>
-
-                    <button
-                      onClick={generatePaymentRequest}
-                      disabled={isLoading}
-                      className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
-                    >
-                      {isLoading ? 'Generating...' : 'Generate Payment QR'}
-                    </button>
-                  </div>
-
-                  {/* Payment Status */}
-                  <div className="mt-6 p-4 rounded-lg bg-gray-50">
-                    <h3 className="font-semibold text-gray-800 mb-2">Payment Status</h3>
-                    <p className={`text-sm ${
-                      paymentStatus.status === 'confirmed' ? 'text-green-600' :
-                      paymentStatus.status === 'error' ? 'text-red-600' :
-                      'text-gray-600'
-                    }`}>
-                      {paymentStatus.message}
-                    </p>
-                  </div>
-                </div>
+                {/* New Payment Request Component */}
+                <CreatePaymentRequest />
 
                 {/* QR Code Display */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
