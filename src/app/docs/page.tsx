@@ -26,7 +26,7 @@ export default function DocsPage() {
               
               <div className="bg-gray-50 rounded-lg p-4 mb-4">
                 <code className="text-lg font-mono text-blue-600">
-                  monadpay://pay?recipient={address}&amount={amount}&txnId={id}&currency={token}
+                  monadpay://pay?recipient=&#123;address&#125;&amount=&#123;amount&#125;&txnId=&#123;id&#125;&currency=&#123;token&#125;
                 </code>
               </div>
 
