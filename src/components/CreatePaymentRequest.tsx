@@ -175,7 +175,7 @@ export default function CreatePaymentRequest() {
                 min="0"
                 value={usdAmount}
                 onChange={(e) => setUsdAmount(e.target.value)}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                 placeholder="Enter amount in USD"
                 disabled={isConverting || isGenerating}
               />
