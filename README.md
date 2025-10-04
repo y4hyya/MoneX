@@ -1,240 +1,227 @@
 # MonadPay - QR Code & Deeplink Crypto Payments
 
-A QR code and deeplink payment system for the Monad Testnet. Generate payment requests and accept crypto payments seamlessly using QR codes that open Monad wallets with pre-filled transaction details.
+A complete merchant-to-mobile payment system for the Monad Testnet, featuring QR code generation and deeplink handling for seamless MON token transfers.
 
-## Features
+## 🏗️ Architecture
 
-- 🎯 **Simple Payment Requests**: Enter USD amounts and generate QR codes instantly
-- 📱 **Mobile-First**: QR codes open Monad wallets with pre-filled transactions
-- 🔗 **Deeplink Integration**: Custom `monadpay://` scheme for seamless wallet integration
-- 💰 **Real-time Pricing**: Automatic USD to MON conversion using CoinGecko API
-- ⚡ **Instant Verification**: Real-time payment status checking
-- 🌐 **Monad Testnet**: Built specifically for Monad Testnet (Chain ID: 10143)
+### Merchant Side (Web)
+- **Framework**: Next.js 15 + TypeScript + Tailwind CSS
+- **Blockchain**: wagmi + viem for wallet connection
+- **QR Generation**: qrcode.react
+- **APIs**: Next.js API routes for rate conversion and QR generation
 
-## Quick Start
+### Mobile Side (Expo)
+- **Framework**: Expo (React Native) + TypeScript
+- **Blockchain**: ethers.js for Monad Testnet transactions
+- **Deeplink**: React Native Linking for custom scheme handling
+- **Navigation**: Expo Router
 
-### Prerequisites
+## 🌐 Network Configuration
 
-- Node.js 18+ 
-- npm or yarn
-- A Monad Testnet wallet address
+**Monad Testnet**
+- **Network Name**: Monad Testnet
+- **RPC URL**: https://testnet-rpc.monad.xyz/
+- **Chain ID**: 10143
+- **Currency Symbol**: MON
+- **Block Explorer**: https://testnet.monadexplorer.com/
 
-### Installation
+## 🔗 Deeplink Format
 
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd monadpay
+```
+monadpay://pay?to={address}&fiat_amount={usd}&fiat_currency=USD&rate_monad_per_usd={rate}&amount_mon={mon}&txn_id={uuid}&ts={iso}&exp=300&nonce={random}&sig={hmac}
 ```
 
-2. Install dependencies:
+### Parameters
+- `to`: Target merchant wallet address
+- `fiat_amount`: USD amount (e.g., "100")
+- `fiat_currency`: Always "USD"
+- `rate_monad_per_usd`: Exchange rate (e.g., "2.0")
+- `amount_mon`: Calculated MON amount (e.g., "200")
+- `txn_id`: Unique transaction identifier (UUID)
+- `ts`: ISO timestamp
+- `exp`: Expiry in seconds (300 = 5 minutes)
+- `nonce`: Random nonce for security
+- `sig`: HMAC signature over payload
+
+## 🚀 Quick Start
+
+### 1. Merchant Web App
+
 ```bash
+# Install dependencies
 npm install
-```
 
-3. Set up environment variables:
-```bash
+# Set up environment variables
 cp .env.local.example .env.local
+# Edit .env.local with your configuration
+
+# Run development server
+npm run dev
 ```
 
-Edit `.env.local` with your merchant wallet address:
+**Environment Variables:**
 ```env
 NEXT_PUBLIC_MERCHANT_WALLET_ADDRESS=0xYourWalletAddress
 NEXT_PUBLIC_MONAD_RPC_URL=https://testnet-rpc.monad.xyz/
 NEXT_PUBLIC_CHAIN_ID=10143
 ```
 
-4. Run the development server:
+### 2. Mobile App
+
 ```bash
-npm run dev
+cd mobile-app/mobile-app
+
+# Install dependencies
+npm install
+
+# Start Expo development server
+npx expo start
 ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+## 📱 Usage Flow
 
-## How It Works
+### Merchant Side
+1. **Connect Wallet**: Click "Connect Wallet" to link MetaMask
+2. **Enter Amount**: Input USD amount (minimum $0.01)
+3. **Convert**: Click "Convert to MON" to fetch exchange rate
+4. **Generate QR**: Click "Generate Payment Link" to create deeplink
+5. **Display QR**: QR code appears in right panel for customer scanning
 
-### For Merchants
+### Customer Side (Mobile)
+1. **Scan QR**: Use camera to scan QR code from merchant
+2. **Review Payment**: App opens with pre-filled payment details
+3. **Confirm**: Tap "Send Payment" to broadcast MON transfer
+4. **Success**: View transaction hash and explorer link
 
-1. **Enter Amount**: Input the USD amount you want to receive
-2. **Generate QR**: Click "Generate Payment QR" to create a payment request
-3. **Display QR**: Show the QR code to customers for scanning
-4. **Receive Payment**: Payment status updates automatically when confirmed
+## 🔧 API Endpoints
 
-### For Customers
+### GET /api/rate?pair=MONAD_USD
+Returns current exchange rate with signature.
 
-1. **Scan QR**: Use your Monad wallet to scan the QR code
-2. **Review Transaction**: Wallet opens with pre-filled payment details
-3. **Confirm Payment**: Sign and send the transaction
-4. **Payment Complete**: Merchant receives confirmation
-
-## Deeplink Schema
-
-MonadPay uses a custom URL scheme for wallet integration:
-
-```
-monadpay://pay?recipient={address}&amount={amount}&txnId={id}&currency={token}
-```
-
-### Parameters
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `recipient` | string | Yes | Merchant's wallet address (0x...) |
-| `amount` | string | Yes | Amount to send (in token units) |
-| `txnId` | string | Yes | Unique transaction identifier |
-| `currency` | string | No | Token symbol (default: MON) |
-
-### Example
-
-```
-monadpay://pay?recipient=0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6&amount=1.5&txnId=abc123&currency=MON
-```
-
-## Wallet Integration
-
-To integrate MonadPay deeplinks into your wallet:
-
-1. **Register URL Scheme**: Add `monadpay://` to your app's URL schemes
-2. **Handle Deeplinks**: Listen for incoming deeplink events
-3. **Parse Parameters**: Extract payment details from the URL
-4. **Pre-fill Transaction**: Use parameters to populate transaction form
-
-See the [Documentation](/docs) for detailed integration examples.
-
-## API Endpoints
-
-### Create Payment Request
-```
-POST /api/create-payment-request
-Content-Type: application/json
-
+**Response:**
+```json
 {
-  "amountUSD": 10.50
+  "rate_monad_per_usd": 2.0,
+  "ts": "2025-10-04T12:34:56Z",
+  "signature": "base64-hmac-signature"
+}
+```
+
+### POST /api/qr
+Generates payment deeplink and QR code.
+
+**Request:**
+```json
+{
+  "fiat_amount": 100,
+  "fiat_currency": "USD",
+  "rate_monad_per_usd": 2.0,
+  "amount_mon": 200,
+  "to": "0xMerchantAddress"
 }
 ```
 
 **Response:**
 ```json
 {
-  "recipient": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6",
-  "amountMON": "1.234567",
-  "amountUSD": 10.50,
-  "txnId": "uuid-1234",
-  "timestamp": 1640995200000,
-  "priceUSD": 8.50
+  "deeplink": "monadpay://pay?...",
+  "qrDataUrl": "data:image/png;base64...",
+  "txn_id": "uuid",
+  "ts": "2025-10-04T12:34:56Z",
+  "exp": 300
 }
 ```
 
-### Verify Payment
-```
-POST /api/verify-payment
-Content-Type: application/json
-
-{
-  "txHash": "0x...",
-  "expectedAmount": "1.234567",
-  "expectedRecipient": "0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6"
-}
-```
-
-**Response:**
-```json
-{
-  "status": "confirmed",
-  "transaction": {
-    "hash": "0x...",
-    "from": "0x...",
-    "to": "0x...",
-    "value": "1234567000000000000",
-    "blockNumber": 12345,
-    "gasUsed": "21000"
-  }
-}
-```
-
-## Monad Testnet Information
-
-- **Network Name**: Monad Testnet
-- **Chain ID**: 10143
-- **RPC URL**: https://testnet-rpc.monad.xyz/
-- **Explorer**: https://testnet.monadexplorer.com/
-- **Currency**: MON (18 decimals)
-
-## Development
-
-### Project Structure
-
-```
-src/
-├── app/
-│   ├── api/
-│   │   ├── create-payment-request/
-│   │   └── verify-payment/
-│   ├── docs/
-│   ├── globals.css
-│   ├── layout.tsx
-│   └── page.tsx
-├── components/
-│   └── providers.tsx
-└── lib/
-    └── wagmi.ts
-```
-
-### Tech Stack
-
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Blockchain**: wagmi + viem
-- **QR Codes**: qrcode.react
-- **State Management**: React Query
-
-## Deployment
-
-### Vercel (Recommended)
-
-1. Push your code to GitHub
-2. Connect your repository to Vercel
-3. Set environment variables in Vercel dashboard
-4. Deploy automatically
-
-### Manual Deployment
-
-```bash
-npm run build
-npm start
-```
-
-## Testing
+## 🧪 Testing
 
 ### Test Deeplinks
 
 **iOS Simulator:**
 ```bash
-xcrun simctl openurl booted "monadpay://pay?recipient=0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6&amount=1.5&txnId=test123"
+xcrun simctl openurl booted "monadpay://pay?to=0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6&fiat_amount=100&fiat_currency=USD&rate_monad_per_usd=2.0&amount_mon=200&txn_id=test123&ts=2025-10-04T12:34:56Z&exp=300&nonce=abc123&sig=test"
 ```
 
 **Android Emulator:**
 ```bash
-adb shell 'am start -W -a android.intent.action.VIEW -d "monadpay://pay?recipient=0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6&amount=1.5&txnId=test123"'
+adb shell 'am start -W -a android.intent.action.VIEW -d "monadpay://pay?to=0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6&fiat_amount=100&fiat_currency=USD&rate_monad_per_usd=2.0&amount_mon=200&txn_id=test123&ts=2025-10-04T12:34:56Z&exp=300&nonce=abc123&sig=test"'
 ```
 
-## Contributing
+### Test Flow
+1. Start merchant web app: `npm run dev`
+2. Start mobile app: `cd mobile-app/mobile-app && npx expo start`
+3. Connect wallet in web app
+4. Generate payment request
+5. Scan QR code with mobile app
+6. Complete payment transaction
+
+## 🔒 Security Features
+
+- **HMAC Signatures**: All API responses include cryptographic signatures
+- **Expiry Timestamps**: Payment requests expire after 5 minutes
+- **Nonce Generation**: Random nonces prevent replay attacks
+- **Parameter Validation**: Strict validation of all deeplink parameters
+- **Network Verification**: Automatic network switching to Monad Testnet
+
+## 📁 Project Structure
+
+```
+monadpay/
+├── src/
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── rate/route.ts      # Exchange rate API
+│   │   │   └── qr/route.ts        # QR generation API
+│   │   ├── docs/page.tsx          # Documentation
+│   │   ├── layout.tsx             # Root layout
+│   │   └── page.tsx               # Main dashboard
+│   ├── components/
+│   │   ├── CreatePaymentRequest.tsx
+│   │   └── providers.tsx
+│   └── lib/
+│       └── wagmi.ts               # Blockchain config
+├── mobile-app/
+│   ├── mobile-app/
+│   │   ├── App.tsx                # Main app
+│   │   ├── DeeplinkHandler.tsx    # Deeplink handling
+│   │   ├── pay.tsx                # Payment screen
+│   │   ├── types.ts               # TypeScript types
+│   │   ├── network.ts             # Network config
+│   │   └── app.json               # Expo config
+└── README.md
+```
+
+## 🚀 Deployment
+
+### Web App (Vercel)
+1. Push code to GitHub
+2. Connect repository to Vercel
+3. Set environment variables
+4. Deploy automatically
+
+### Mobile App (Expo)
+1. Build for production: `npx expo build`
+2. Submit to app stores via Expo Application Services (EAS)
+3. Or use Expo Go for testing
+
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests if applicable
+4. Test thoroughly
 5. Submit a pull request
 
-## License
+## 📄 License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT License - see LICENSE file for details.
 
-## Support
+## 🆘 Support
 
-For questions or support, please open an issue on GitHub or contact the development team.
+For questions or issues:
+- Open an issue on GitHub
+- Check the documentation at `/docs`
+- Review the deeplink format specifications
 
 ---
 
-Built with ❤️ for the Monad ecosystem
+**Built for the Monad ecosystem** 🚀

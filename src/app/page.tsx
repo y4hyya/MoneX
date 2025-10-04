@@ -196,7 +196,7 @@ export default function MerchantDashboard() {
                       <div className="flex justify-center">
                         <div className="p-4 bg-white border-2 border-gray-200 rounded-lg">
                           <QRCodeCanvas
-                            value={qrData.qrText}
+                            value={qrData.deeplink}
                             size={200}
                             level="M"
                             includeMargin={true}
@@ -206,20 +206,16 @@ export default function MerchantDashboard() {
 
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-gray-600">Amount (USD):</span>
-                          <span className="font-semibold">${qrData.usdAmount}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Amount (MONAD):</span>
-                          <span className="font-semibold">{qrData.amount}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Rate:</span>
-                          <span className="font-semibold">${qrData.rate.toFixed(4)}/MONAD</span>
-                        </div>
-                        <div className="flex justify-between">
                           <span className="text-gray-600">Transaction ID:</span>
-                          <span className="font-mono text-xs">{qrData.txnId}</span>
+                          <span className="font-mono text-xs">{qrData.txn_id}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Created:</span>
+                          <span className="font-mono text-xs">{new Date(qrData.ts).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Expires:</span>
+                          <span className="font-mono text-xs">{Math.floor(qrData.exp / 60)} minutes</span>
                         </div>
                       </div>
 

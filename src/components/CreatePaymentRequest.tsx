@@ -4,21 +4,17 @@ import { useState, useEffect, useRef } from 'react'
 import { QRCodeCanvas } from 'qrcode.react'
 
 interface RateData {
-  pair: string
-  rate: number
-  timestamp: number
+  rate_monad_per_usd: number
+  ts: string
+  signature: string
 }
 
 interface QRData {
   deeplink: string
-  qrText: string
-  txnId: string
-  recipient: string
-  amount: number
-  currency: string
-  usdAmount: number
-  rate: number
-  timestamp: number
+  qrDataUrl: string
+  txn_id: string
+  ts: string
+  exp: number
 }
 
 interface CreatePaymentRequestProps {
@@ -28,9 +24,9 @@ interface CreatePaymentRequestProps {
 }
 
 export default function CreatePaymentRequest({ onQRGenerated, isWalletConnected, connectedAddress }: CreatePaymentRequestProps) {
-  const [usdAmount, setUsdAmount] = useState<string>('')
-  const [monAmount, setMonAmount] = useState<number | null>(null)
-  const [rate, setRate] = useState<number | null>(null)
+  const [fiatAmount, setFiatAmount] = useState<string>('')
+  const [amountMon, setAmountMon] = useState<number | null>(null)
+  const [rateMonadPerUsd, setRateMonadPerUsd] = useState<number | null>(null)
   const [qrData, setQrData] = useState<QRData | null>(null)
   
   const [isConverting, setIsConverting] = useState(false)
@@ -76,8 +72,13 @@ export default function CreatePaymentRequest({ onQRGenerated, isWalletConnected,
   }
 
   const handleConvert = async () => {
-    if (!usdAmount || parseFloat(usdAmount) <= 0) {
+    if (!fiatAmount || parseFloat(fiatAmount) <= 0) {
       setError('Please enter a valid USD amount')
+      return
+    }
+
+    if (parseFloat(fiatAmount) < 0.01) {
+      setError('Minimum amount is $0.01')
       return
     }
 
@@ -92,10 +93,10 @@ export default function CreatePaymentRequest({ onQRGenerated, isWalletConnected,
       }
 
       const rateData: RateData = await response.json()
-      setRate(rateData.rate)
+      setRateMonadPerUsd(rateData.rate_monad_per_usd)
       
-      const calculatedMonAmount = parseFloat(usdAmount) * rateData.rate
-      setMonAmount(calculatedMonAmount)
+      const calculatedAmountMon = parseFloat(fiatAmount) * rateData.rate_monad_per_usd
+      setAmountMon(calculatedAmountMon)
       
       // Start countdown when conversion is complete
       startCountdown()
@@ -108,7 +109,7 @@ export default function CreatePaymentRequest({ onQRGenerated, isWalletConnected,
   }
 
   const handleGeneratePaymentLink = async () => {
-    if (!usdAmount || !monAmount || !rate) {
+    if (!fiatAmount || !amountMon || !rateMonadPerUsd) {
       setError('Please convert USD to MON first')
       return
     }
@@ -123,10 +124,11 @@ export default function CreatePaymentRequest({ onQRGenerated, isWalletConnected,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          usdAmount: parseFloat(usdAmount),
-          monAmount,
-          rate,
-          recipientAddress: connectedAddress
+          fiat_amount: parseFloat(fiatAmount),
+          fiat_currency: 'USD',
+          rate_monad_per_usd: rateMonadPerUsd,
+          amount_mon: amountMon,
+          to: connectedAddress
         }),
       })
 
@@ -160,9 +162,9 @@ export default function CreatePaymentRequest({ onQRGenerated, isWalletConnected,
   }
 
   const resetForm = () => {
-    setUsdAmount('')
-    setMonAmount(null)
-    setRate(null)
+    setFiatAmount('')
+    setAmountMon(null)
+    setRateMonadPerUsd(null)
     setQrData(null)
     setError(null)
     setTimeLeft(null)
@@ -224,32 +226,32 @@ export default function CreatePaymentRequest({ onQRGenerated, isWalletConnected,
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Amount (USD)
+              Amount (USD) - Min $0.01
             </label>
             <div className="flex space-x-3">
               <input
                 type="number"
                 step="0.01"
-                min="0"
-                value={usdAmount}
-                onChange={(e) => setUsdAmount(e.target.value)}
+                min="0.01"
+                value={fiatAmount}
+                onChange={(e) => setFiatAmount(e.target.value)}
                 className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                 placeholder="Enter amount in USD"
                 disabled={isConverting || isGenerating}
               />
               <button
                 onClick={handleConvert}
-                disabled={!usdAmount || isConverting || isGenerating}
+                disabled={!fiatAmount || isConverting || isGenerating}
                 className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition duration-200"
               >
-                {isConverting ? 'Converting...' : 'Convert'}
+                {isConverting ? 'Converting...' : 'Convert to MON'}
               </button>
             </div>
           </div>
         </div>
 
         {/* Step 2: Conversion Result */}
-        {monAmount && rate && (
+        {amountMon && rateMonadPerUsd && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <div className="flex justify-between items-center mb-2">
               <h3 className="text-lg font-semibold text-green-800">
@@ -284,22 +286,22 @@ export default function CreatePaymentRequest({ onQRGenerated, isWalletConnected,
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div>
                 <span className="text-green-600 font-medium">USD Amount:</span>
-                <p className="text-green-800 font-semibold">${usdAmount}</p>
+                <p className="text-green-800 font-semibold">${fiatAmount}</p>
               </div>
               <div>
                 <span className="text-green-600 font-medium">Exchange Rate:</span>
-                <p className="text-green-800 font-semibold">1 MONAD = ${rate.toFixed(4)}</p>
+                <p className="text-green-800 font-semibold">{rateMonadPerUsd} MON per $1</p>
               </div>
               <div>
-                <span className="text-green-600 font-medium">MONAD Amount:</span>
-                <p className="text-green-800 font-semibold">{monAmount.toFixed(6)} MONAD</p>
+                <span className="text-green-600 font-medium">MON Amount:</span>
+                <p className="text-green-800 font-semibold">{amountMon.toFixed(6)} MON</p>
               </div>
             </div>
           </div>
         )}
 
         {/* Step 3: Generate Payment Link */}
-        {monAmount && rate && (
+        {amountMon && rateMonadPerUsd && (
           <div className="space-y-4">
             <button
               onClick={handleGeneratePaymentLink}

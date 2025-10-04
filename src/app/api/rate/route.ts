@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createHmac } from 'crypto'
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,26 +13,26 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // For demo purposes, we'll use mock rates
-    // In production, you would fetch from a real price feed
-    const mockRates: Record<string, number> = {
-      'MONAD_USD': 0.50, // Mock rate: 1 MONAD = $0.50
-      'USD_MONAD': 2.00, // Mock rate: $1 = 2 MONAD
-    }
-
-    const rate = mockRates[pair]
-    
-    if (!rate) {
+    if (pair !== 'MONAD_USD') {
       return NextResponse.json(
-        { error: 'Unsupported currency pair' },
+        { error: 'Only MONAD_USD pair is supported' },
         { status: 400 }
       )
     }
 
+    // Mock rate: 1 MONAD = $0.50 (so 1 USD = 2 MONAD)
+    const rate_monad_per_usd = 2.0
+    const ts = new Date().toISOString()
+    
+    // Create mock signature (in production, use proper HMAC with secret key)
+    const payload = `rate_monad_per_usd=${rate_monad_per_usd}&ts=${ts}`
+    const secret = 'mock-secret-key' // In production, use environment variable
+    const signature = createHmac('sha256', secret).update(payload).digest('base64')
+
     return NextResponse.json({
-      pair,
-      rate,
-      timestamp: Date.now()
+      rate_monad_per_usd,
+      ts,
+      signature
     })
   } catch (error) {
     console.error('Error fetching rate:', error)
