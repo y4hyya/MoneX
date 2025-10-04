@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { QRCodeCanvas } from 'qrcode.react'
+import { useAccount, useConnect, useDisconnect } from 'wagmi'
+import { injected } from 'wagmi/connectors'
 import CreatePaymentRequest from '@/components/CreatePaymentRequest'
 
 
@@ -29,6 +31,11 @@ export default function MerchantDashboard() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [qrData, setQrData] = useState<any>(null)
+  
+  // Wallet connection
+  const { address, isConnected } = useAccount()
+  const { connect } = useConnect()
+  const { disconnect } = useDisconnect()
 
   const generatePaymentRequest = async () => {
     if (!amountUSD || parseFloat(amountUSD) <= 0) {
@@ -135,14 +142,48 @@ export default function MerchantDashboard() {
                 <h1 className="text-4xl font-bold text-gray-900 mb-2">
                   MonadPay
                 </h1>
-                <p className="text-xl text-gray-600">
+                <p className="text-xl text-gray-600 mb-6">
                   QR Code & Deeplink Crypto Payments on Monad Testnet
                 </p>
+                
+                {/* Wallet Connection */}
+                <div className="flex justify-center mb-6">
+                  {!isConnected ? (
+                    <button
+                      onClick={() => connect({ connector: injected() })}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
+                    >
+                      Connect Wallet
+                    </button>
+                  ) : (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                          <span className="text-green-800 font-medium">Wallet Connected</span>
+                        </div>
+                        <div className="text-sm text-green-700 font-mono">
+                          {address?.slice(0, 6)}...{address?.slice(-4)}
+                        </div>
+                        <button
+                          onClick={() => disconnect()}
+                          className="text-green-600 hover:text-green-800 text-sm font-medium"
+                        >
+                          Disconnect
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* New Payment Request Component */}
-                <CreatePaymentRequest onQRGenerated={setQrData} />
+                <CreatePaymentRequest 
+                  onQRGenerated={setQrData} 
+                  isWalletConnected={isConnected}
+                  connectedAddress={address}
+                />
 
                 {/* QR Code Display */}
                 <div className="bg-white rounded-xl shadow-lg p-6">

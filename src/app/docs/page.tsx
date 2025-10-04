@@ -26,7 +26,7 @@ export default function DocsPage() {
               
               <div className="bg-gray-50 rounded-lg p-4 mb-4">
                 <code className="text-lg font-mono text-blue-600">
-                  monadpay://pay?recipient={address}&amount={amount}&txnId={id}&currency={token}
+                  monadpay://send?recipient={address}&amount={amount}&txnId={id}&currency={token}&action=send
                 </code>
               </div>
 
@@ -79,19 +79,19 @@ export default function DocsPage() {
               
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-700 mb-2">Basic Payment</h3>
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">MONAD Payment Request</h3>
                   <div className="bg-gray-50 rounded-lg p-4">
                     <code className="text-sm font-mono text-blue-600">
-                      monadpay://pay?recipient=0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6&amount=1.5&txnId=abc123
+                      monadpay://send?recipient=0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6&amount=1.5&txnId=abc123&currency=MONAD&action=send
                     </code>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-700 mb-2">Payment with Currency</h3>
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">MONAD Payment with Rate Info</h3>
                   <div className="bg-gray-50 rounded-lg p-4">
                     <code className="text-sm font-mono text-blue-600">
-                      monadpay://pay?recipient=0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6&amount=100&txnId=def456&currency=USDC
+                      monadpay://send?recipient=0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6&amount=21&txnId=def456&currency=MONAD&action=send&usdAmount=10.5&rate=0.5
                     </code>
                   </div>
                 </div>

@@ -23,9 +23,11 @@ interface QRData {
 
 interface CreatePaymentRequestProps {
   onQRGenerated?: (qrData: QRData) => void
+  isWalletConnected: boolean
+  connectedAddress?: string
 }
 
-export default function CreatePaymentRequest({ onQRGenerated }: CreatePaymentRequestProps) {
+export default function CreatePaymentRequest({ onQRGenerated, isWalletConnected, connectedAddress }: CreatePaymentRequestProps) {
   const [usdAmount, setUsdAmount] = useState<string>('')
   const [monAmount, setMonAmount] = useState<number | null>(null)
   const [rate, setRate] = useState<number | null>(null)
@@ -123,7 +125,8 @@ export default function CreatePaymentRequest({ onQRGenerated }: CreatePaymentReq
         body: JSON.stringify({
           usdAmount: parseFloat(usdAmount),
           monAmount,
-          rate
+          rate,
+          recipientAddress: connectedAddress
         }),
       })
 
@@ -168,6 +171,34 @@ export default function CreatePaymentRequest({ onQRGenerated }: CreatePaymentReq
     }
   }
 
+  // Show wallet connection requirement if not connected
+  if (!isWalletConnected) {
+    return (
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+          Create Payment Request
+        </h2>
+        
+        <div className="text-center py-8">
+          <div className="w-16 h-16 mx-auto mb-4 bg-yellow-100 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">
+            Wallet Connection Required
+          </h3>
+          <p className="text-gray-600 mb-4">
+            Please connect your wallet to create payment requests and receive MONAD payments.
+          </p>
+          <p className="text-sm text-gray-500">
+            Your wallet address will be used as the recipient for payments.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-lg p-6">
       <h2 className="text-2xl font-semibold text-gray-800 mb-6">
@@ -175,6 +206,20 @@ export default function CreatePaymentRequest({ onQRGenerated }: CreatePaymentReq
       </h2>
       
       <div className="space-y-6">
+        {/* Wallet Info */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2 mb-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <span className="text-blue-800 font-medium">Connected Wallet</span>
+          </div>
+          <p className="text-blue-700 font-mono text-sm">
+            {connectedAddress}
+          </p>
+          <p className="text-blue-600 text-xs mt-1">
+            This address will receive MONAD payments
+          </p>
+        </div>
+
         {/* Step 1: USD Input */}
         <div className="space-y-4">
           <div>

@@ -3,11 +3,11 @@ import { v4 as uuidv4 } from 'uuid'
 
 export async function POST(request: NextRequest) {
   try {
-    const { usdAmount, monAmount, rate } = await request.json()
+    const { usdAmount, monAmount, rate, recipientAddress } = await request.json()
 
-    if (!usdAmount || !monAmount || !rate) {
+    if (!usdAmount || !monAmount || !rate || !recipientAddress) {
       return NextResponse.json(
-        { error: 'Missing required fields: usdAmount, monAmount, rate' },
+        { error: 'Missing required fields: usdAmount, monAmount, rate, recipientAddress' },
         { status: 400 }
       )
     }
@@ -15,24 +15,22 @@ export async function POST(request: NextRequest) {
     // Generate unique transaction ID
     const txnId = uuidv4()
     
-    // Get merchant wallet address from environment
-    const merchantWallet = process.env.NEXT_PUBLIC_MERCHANT_WALLET_ADDRESS
+    // Use the provided recipient address (connected wallet)
+    const merchantWallet = recipientAddress
 
-    if (!merchantWallet) {
-      throw new Error('Merchant wallet address not configured')
-    }
-
-    // Create deeplink
+    // Create deeplink for MONAD coin request
     const params = new URLSearchParams({
       recipient: merchantWallet,
       amount: monAmount.toString(),
       txnId: txnId,
       currency: 'MONAD',
       usdAmount: usdAmount.toString(),
-      rate: rate.toString()
+      rate: rate.toString(),
+      action: 'send',
+      token: 'MONAD'
     })
     
-    const deeplink = `monadpay://pay?${params.toString()}`
+    const deeplink = `monadpay://send?${params.toString()}`
 
     // Generate QR code data URL (base64 encoded)
     // In a real implementation, you would use a QR code library on the server
