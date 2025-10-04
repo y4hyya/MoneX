@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { QRCodeCanvas } from 'qrcode.react'
+import { useAccount, useConnect, useDisconnect } from 'wagmi'
+import { injected } from 'wagmi/connectors'
 import CreatePaymentRequest from '@/components/CreatePaymentRequest'
 
 
@@ -21,6 +23,10 @@ interface PaymentStatus {
 }
 
 export default function MerchantDashboard() {
+  const { address, isConnected } = useAccount()
+  const { connect } = useConnect()
+  const { disconnect } = useDisconnect()
+  
   const [amountUSD, setAmountUSD] = useState<string>('')
   const [paymentData, setPaymentData] = useState<PaymentData | null>(null)
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>({
@@ -114,7 +120,7 @@ export default function MerchantDashboard() {
       txnId: data.txnId,
       currency: 'MON'
     })
-    return `monadpay://pay?${params.toString()}`
+    return `monex://pay?${params.toString()}`
   }
 
   const copyDeeplink = () => {
@@ -132,16 +138,51 @@ export default function MerchantDashboard() {
               {/* Header */}
               <div className="text-center mb-8">
                 <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                  MonadPay
+                  MoneX
                 </h1>
-                <p className="text-xl text-gray-600">
+                <p className="text-xl text-gray-600 mb-6">
                   QR Code & Deeplink Crypto Payments on Monad Testnet
                 </p>
+                
+                {/* Wallet Connection */}
+                <div className="flex justify-center">
+                  {isConnected ? (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 max-w-md">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                          <div>
+                            <p className="text-green-800 font-medium">Wallet Connected</p>
+                            <p className="text-green-600 font-mono text-sm">
+                              {address?.slice(0, 6)}...{address?.slice(-4)}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => disconnect()}
+                          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition duration-200"
+                        >
+                          Disconnect
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => connect({ connector: injected() })}
+                      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition duration-200 shadow-lg hover:shadow-xl"
+                    >
+                      Connect MetaMask Wallet
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* New Payment Request Component */}
-                <CreatePaymentRequest />
+                <CreatePaymentRequest 
+                  isWalletConnected={isConnected}
+                  connectedAddress={address}
+                />
 
                 {/* QR Code Display */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
@@ -204,20 +245,20 @@ export default function MerchantDashboard() {
               {/* Instructions */}
               <div className="mt-8 bg-blue-50 rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-blue-900 mb-4">
-                  How to Use MonadPay
+                  How to Use MoneX
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-blue-800">
                   <div className="flex items-start space-x-2">
                     <span className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">1</span>
-                    <span>Enter the USD amount you want to receive</span>
+                    <span>Connect your MetaMask wallet to receive payments</span>
                   </div>
                   <div className="flex items-start space-x-2">
                     <span className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">2</span>
-                    <span>Click "Generate Payment QR" to create a payment request</span>
+                    <span>Enter USD amount and generate payment QR code</span>
                   </div>
                   <div className="flex items-start space-x-2">
                     <span className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">3</span>
-                    <span>Customer scans QR code with their Monad wallet to pay</span>
+                    <span>Customer scans QR code with MetaMask to pay</span>
                   </div>
                 </div>
               </div>
