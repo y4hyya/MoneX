@@ -20,13 +20,13 @@ export default function DocsPage() {
                 Deeplink Schema
               </h2>
               <p className="text-gray-600 mb-4">
-                MonadPay uses a custom URL scheme to enable seamless integration with Monad wallets. 
-                The deeplink format allows wallets to pre-fill transaction details for easy payments.
+                MonadPay uses MetaMask deeplinks to enable seamless integration with MetaMask mobile app. 
+                The deeplink format allows MetaMask to pre-fill transaction details for easy payments.
               </p>
               
               <div className="bg-gray-50 rounded-lg p-4 mb-4">
                 <code className="text-lg font-mono text-blue-600">
-                  monadpay://send?recipient={address}&amount={amount}&txnId={id}&currency={token}&action=send
+                  https://link.metamask.io/send/{recipient}@{chainId}?value={amountWei}
                 </code>
               </div>
 
@@ -49,22 +49,16 @@ export default function DocsPage() {
                       <td className="border border-gray-300 px-4 py-2">Merchant's wallet address (0x...)</td>
                     </tr>
                     <tr>
-                      <td className="border border-gray-300 px-4 py-2 font-mono">amount</td>
-                      <td className="border border-gray-300 px-4 py-2">string</td>
+                      <td className="border border-gray-300 px-4 py-2 font-mono">chainId</td>
+                      <td className="border border-gray-300 px-4 py-2">number</td>
                       <td className="border border-gray-300 px-4 py-2">Yes</td>
-                      <td className="border border-gray-300 px-4 py-2">Amount to send (in token units)</td>
+                      <td className="border border-gray-300 px-4 py-2">Chain ID (10143 for Monad Testnet)</td>
                     </tr>
                     <tr>
-                      <td className="border border-gray-300 px-4 py-2 font-mono">txnId</td>
+                      <td className="border border-gray-300 px-4 py-2 font-mono">value</td>
                       <td className="border border-gray-300 px-4 py-2">string</td>
                       <td className="border border-gray-300 px-4 py-2">Yes</td>
-                      <td className="border border-gray-300 px-4 py-2">Unique transaction identifier</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-gray-300 px-4 py-2 font-mono">currency</td>
-                      <td className="border border-gray-300 px-4 py-2">string</td>
-                      <td className="border border-gray-300 px-4 py-2">No</td>
-                      <td className="border border-gray-300 px-4 py-2">Token symbol (default: MON)</td>
+                      <td className="border border-gray-300 px-4 py-2">Amount to send (in wei - smallest unit)</td>
                     </tr>
                   </tbody>
                 </table>
@@ -79,19 +73,19 @@ export default function DocsPage() {
               
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-700 mb-2">MONAD Payment Request</h3>
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">MONAD Payment Request (1.5 MON)</h3>
                   <div className="bg-gray-50 rounded-lg p-4">
                     <code className="text-sm font-mono text-blue-600">
-                      monadpay://send?recipient=0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6&amount=1.5&txnId=abc123&currency=MONAD&action=send
+                      https://link.metamask.io/send/0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6@10143?value=1500000000000000000
                     </code>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-700 mb-2">MONAD Payment with Rate Info</h3>
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">MONAD Payment with USD Amount (10.5 USD = 21 MON)</h3>
                   <div className="bg-gray-50 rounded-lg p-4">
                     <code className="text-sm font-mono text-blue-600">
-                      monadpay://send?recipient=0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6&amount=21&txnId=def456&currency=MONAD&action=send&usdAmount=10.5&rate=0.5
+                      https://link.metamask.io/send/0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6@10143?value=21000000000000000000
                     </code>
                   </div>
                 </div>
@@ -169,7 +163,7 @@ export default function DocsPage() {
                   <h3 className="text-lg font-semibold text-gray-700 mb-2">iOS Simulator</h3>
                   <div className="bg-gray-50 rounded-lg p-4">
                     <code className="text-sm font-mono text-blue-600">
-                      xcrun simctl openurl booted "monadpay://pay?recipient=0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6&amount=1.5&txnId=test123"
+                      xcrun simctl openurl booted "https://link.metamask.io/send/0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6@10143?value=1500000000000000000"
                     </code>
                   </div>
                 </div>
@@ -178,7 +172,7 @@ export default function DocsPage() {
                   <h3 className="text-lg font-semibold text-gray-700 mb-2">Android Emulator</h3>
                   <div className="bg-gray-50 rounded-lg p-4">
                     <code className="text-sm font-mono text-blue-600">
-                      adb shell 'am start -W -a android.intent.action.VIEW -d "monadpay://pay?recipient=0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6&amount=1.5&txnId=test123"'
+                      adb shell 'am start -W -a android.intent.action.VIEW -d "https://link.metamask.io/send/0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6@10143?value=1500000000000000000"'
                     </code>
                   </div>
                 </div>
@@ -190,7 +184,7 @@ export default function DocsPage() {
                   </p>
                   <div className="bg-gray-50 rounded-lg p-4">
                     <code className="text-sm font-mono text-blue-600">
-                      &lt;a href="monadpay://pay?recipient=0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6&amount=1.5&txnId=test123"&gt;Test Payment&lt;/a&gt;
+                      &lt;a href="https://link.metamask.io/send/0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6@10143?value=1500000000000000000"&gt;Test Payment&lt;/a&gt;
                     </code>
                   </div>
                 </div>

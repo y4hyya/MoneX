@@ -116,13 +116,12 @@ export default function MerchantDashboard() {
   }
 
   const generateDeeplink = (data: PaymentData) => {
-    const params = new URLSearchParams({
-      recipient: data.recipient,
-      amount: data.amountMON,
-      txnId: data.txnId,
-      currency: 'MON'
-    })
-    return `monadpay://pay?${params.toString()}`
+    // Convert MON amount to wei (18 decimals)
+    const amountWei = (parseFloat(data.amountMON) * Math.pow(10, 18)).toString()
+    const chainId = 10143 // Monad Testnet chain ID
+    
+    // MetaMask deeplink format for native currency transfer
+    return `https://link.metamask.io/send/${data.recipient}@${chainId}?value=${amountWei}`
   }
 
   const copyDeeplink = () => {
@@ -143,7 +142,7 @@ export default function MerchantDashboard() {
                   MonadPay
                 </h1>
                 <p className="text-xl text-gray-600 mb-6">
-                  QR Code & Deeplink Crypto Payments on Monad Testnet
+                  QR Code & MetaMask Deeplink Payments on Monad Testnet
                 </p>
                 
                 {/* Wallet Connection */}
@@ -207,22 +206,22 @@ export default function MerchantDashboard() {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-600">Transaction ID:</span>
-                          <span className="font-mono text-xs">{qrData.txn_id}</span>
+                          <span className="font-mono text-xs text-black">{qrData.txn_id}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">Created:</span>
-                          <span className="font-mono text-xs">{new Date(qrData.ts).toLocaleString()}</span>
+                          <span className="font-mono text-xs text-black">{new Date(qrData.ts).toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">Expires:</span>
-                          <span className="font-mono text-xs">{Math.floor(qrData.exp / 60)} minutes</span>
+                          <span className="font-mono text-xs text-black">{Math.floor(qrData.exp / 60)} minutes</span>
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">
-                          Payment Deeplink:
-                        </label>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      MetaMask Deeplink:
+                    </label>
                         <div className="flex space-x-2">
                           <input
                             type="text"
@@ -252,6 +251,119 @@ export default function MerchantDashboard() {
                 </div>
               </div>
 
+              {/* Previous Transactions */}
+              <div className="mt-8 bg-white rounded-xl shadow-lg p-6">
+                <h3 className="text-2xl font-semibold text-gray-800 mb-6">
+                  Previous Transactions
+                </h3>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Date</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Amount (USD)</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Amount (MON)</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Wallet Address</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Status</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Txn Hash</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-3 px-4 text-sm text-black">2025-10-04 18:30:15</td>
+                        <td className="py-3 px-4 text-sm text-black font-semibold">$50.00</td>
+                        <td className="py-3 px-4 text-sm text-black font-semibold">100.000000 MON</td>
+                        <td className="py-3 px-4 text-sm text-black font-mono">0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6</td>
+                        <td className="py-3 px-4">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Completed
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-sm text-black font-mono">0x1234...5678</td>
+                        <td className="py-3 px-4">
+                          <a
+                            href="https://testnet.monadexplorer.com/tx/0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >
+                            View on Explorer
+                          </a>
+                        </td>
+                      </tr>
+                      <tr className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-3 px-4 text-sm text-black">2025-10-04 17:45:22</td>
+                        <td className="py-3 px-4 text-sm text-black font-semibold">$25.50</td>
+                        <td className="py-3 px-4 text-sm text-black font-semibold">51.000000 MON</td>
+                        <td className="py-3 px-4 text-sm text-black font-mono">0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6</td>
+                        <td className="py-3 px-4">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Completed
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-sm text-black font-mono">0xabcd...efgh</td>
+                        <td className="py-3 px-4">
+                          <a
+                            href="https://testnet.monadexplorer.com/tx/0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >
+                            View on Explorer
+                          </a>
+                        </td>
+                      </tr>
+                      <tr className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-3 px-4 text-sm text-black">2025-10-04 16:20:08</td>
+                        <td className="py-3 px-4 text-sm text-black font-semibold">$100.00</td>
+                        <td className="py-3 px-4 text-sm text-black font-semibold">200.000000 MON</td>
+                        <td className="py-3 px-4 text-sm text-black font-mono">0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6</td>
+                        <td className="py-3 px-4">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            Pending
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-sm text-black font-mono">0x9876...5432</td>
+                        <td className="py-3 px-4">
+                          <a
+                            href="https://testnet.monadexplorer.com/tx/0x9876543210fedcba9876543210fedcba9876543210fedcba9876543210fedcba"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >
+                            View on Explorer
+                          </a>
+                        </td>
+                      </tr>
+                      <tr className="hover:bg-gray-50">
+                        <td className="py-3 px-4 text-sm text-black">2025-10-04 15:10:45</td>
+                        <td className="py-3 px-4 text-sm text-black font-semibold">$75.25</td>
+                        <td className="py-3 px-4 text-sm text-black font-semibold">150.500000 MON</td>
+                        <td className="py-3 px-4 text-sm text-black font-mono">0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6</td>
+                        <td className="py-3 px-4">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Completed
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-sm text-black font-mono">0x5555...aaaa</td>
+                        <td className="py-3 px-4">
+                          <a
+                            href="https://testnet.monadexplorer.com/tx/0x5555aaaa5555aaaa5555aaaa5555aaaa5555aaaa5555aaaa5555aaaa5555aaaa"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >
+                            View on Explorer
+                          </a>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
               {/* Instructions */}
               <div className="mt-8 bg-blue-50 rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-blue-900 mb-4">
@@ -268,7 +380,7 @@ export default function MerchantDashboard() {
                   </div>
                   <div className="flex items-start space-x-2">
                     <span className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">3</span>
-                    <span>Customer scans QR code with their Monad wallet to pay</span>
+                    <span>Customer scans QR code with MetaMask mobile app to pay</span>
                   </div>
                 </div>
               </div>

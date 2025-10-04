@@ -118,25 +118,20 @@ export default function CreatePaymentRequest({ onQRGenerated, isWalletConnected,
     setError(null)
 
     try {
-      const response = await fetch('/api/qr', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fiat_amount: parseFloat(fiatAmount),
-          fiat_currency: 'USD',
-          rate_monad_per_usd: rateMonadPerUsd,
-          amount_mon: amountMon,
-          to: connectedAddress
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to generate payment link')
+      // Generate MetaMask deeplink directly instead of using API
+      const amountWei = (amountMon * Math.pow(10, 18)).toString()
+      const chainId = 10143 // Monad Testnet chain ID
+      const deeplink = `https://link.metamask.io/send/${connectedAddress}@${chainId}?value=${amountWei}`
+      
+      // Create QR data object
+      const qrData: QRData = {
+        deeplink,
+        qrDataUrl: `data:image/png;base64,${Buffer.from(deeplink).toString('base64')}`,
+        txn_id: Math.random().toString(36).substring(2, 15),
+        ts: new Date().toISOString(),
+        exp: 300 // 5 minutes
       }
 
-      const qrData: QRData = await response.json()
       setQrData(qrData)
       
       // Pass QR data to parent component

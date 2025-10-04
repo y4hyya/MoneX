@@ -17,22 +17,34 @@ export function DeeplinkHandler({ children }: DeeplinkHandlerProps) {
       try {
         const parsed = Linking.parse(url);
         
-        if (parsed.scheme === 'monadpay' && parsed.hostname === 'pay') {
+        // Handle MetaMask deeplinks for native currency transfer
+        if (parsed.scheme === 'https' && parsed.hostname === 'link.metamask.io' && parsed.pathname?.startsWith('/send/')) {
+          // Extract recipient and chainId from path
+          const pathParts = parsed.pathname.split('/');
+          const recipientAndChain = pathParts[2]; // Format: recipient@chainId
+          const [recipient, chainId] = recipientAndChain.split('@');
+          
+          // Extract value from query params
+          const value = parsed.queryParams?.value as string || '0';
+          
+          // Convert wei to MON (18 decimals)
+          const amountMon = (parseInt(value) / Math.pow(10, 18)).toString();
+          
           const params: PaymentParams = {
-            to: parsed.queryParams?.to as string || '',
-            fiat_amount: parsed.queryParams?.fiat_amount as string || '',
-            fiat_currency: parsed.queryParams?.fiat_currency as string || '',
-            rate_monad_per_usd: parsed.queryParams?.rate_monad_per_usd as string || '',
-            amount_mon: parsed.queryParams?.amount_mon as string || '',
-            txn_id: parsed.queryParams?.txn_id as string || '',
-            ts: parsed.queryParams?.ts as string || '',
-            exp: parsed.queryParams?.exp as string || '',
-            nonce: parsed.queryParams?.nonce as string || '',
-            sig: parsed.queryParams?.sig as string || ''
+            to: recipient,
+            fiat_amount: '0', // Not available in MetaMask deeplink
+            fiat_currency: 'USD',
+            rate_monad_per_usd: '2.0', // Default rate
+            amount_mon: amountMon,
+            txn_id: Math.random().toString(36).substring(2, 15),
+            ts: new Date().toISOString(),
+            exp: '300',
+            nonce: Math.random().toString(36).substring(2, 15),
+            sig: ''
           };
 
           // Validate required parameters
-          if (!params.to || !params.amount_mon || !params.txn_id) {
+          if (!params.to || !params.amount_mon) {
             console.error('Missing required payment parameters');
             return;
           }
