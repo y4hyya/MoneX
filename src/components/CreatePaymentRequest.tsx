@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { QRCodeCanvas } from 'qrcode.react'
 
 interface RateData {
@@ -30,6 +30,42 @@ export default function CreatePaymentRequest() {
   const [isConverting, setIsConverting] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [timeLeft, setTimeLeft] = useState<number | null>(null)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (timeLeft !== null && timeLeft > 0) {
+      intervalRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev === null || prev <= 1) {
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    } else if (timeLeft === 0) {
+      // Payment expired
+      setQrData(null)
+      setError('Payment request has expired. Please generate a new one.')
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+    }
+  }, [timeLeft])
+
+  const startCountdown = () => {
+    setTimeLeft(60) // 1 minute countdown
+  }
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
 
   const handleConvert = async () => {
     if (!usdAmount || parseFloat(usdAmount) <= 0) {
@@ -88,6 +124,7 @@ export default function CreatePaymentRequest() {
 
       const qrData: QRData = await response.json()
       setQrData(qrData)
+      startCountdown() // Start the countdown when QR is generated
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate payment link')
@@ -112,6 +149,10 @@ export default function CreatePaymentRequest() {
     setRate(null)
     setQrData(null)
     setError(null)
+    setTimeLeft(null)
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+    }
   }
 
   return (
@@ -189,13 +230,27 @@ export default function CreatePaymentRequest() {
         {qrData && (
           <div className="space-y-6">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-blue-800 mb-4">
-                Payment Request Generated
-              </h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-blue-800">
+                  Payment Request Generated
+                </h3>
+                {timeLeft !== null && timeLeft > 0 && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-blue-600 font-medium">Expires in:</span>
+                    <span className={`text-lg font-bold px-3 py-1 rounded ${
+                      timeLeft <= 10 ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {formatTime(timeLeft)}
+                    </span>
+                  </div>
+                )}
+              </div>
               
               {/* QR Code */}
               <div className="flex justify-center mb-4">
-                <div className="p-4 bg-white border-2 border-gray-200 rounded-lg">
+                <div className={`p-4 bg-white border-2 rounded-lg ${
+                  timeLeft !== null && timeLeft <= 10 ? 'border-red-300' : 'border-gray-200'
+                }`}>
                   <QRCodeCanvas
                     value={qrData.qrText}
                     size={200}
@@ -204,6 +259,20 @@ export default function CreatePaymentRequest() {
                   />
                 </div>
               </div>
+
+              {/* Expiry Warning */}
+              {timeLeft !== null && timeLeft <= 10 && timeLeft > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <p className="text-red-800 font-medium text-sm">
+                      Payment request expires in {timeLeft} seconds! Generate a new one if needed.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Payment Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
