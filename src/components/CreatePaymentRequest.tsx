@@ -335,7 +335,7 @@ export default function CreatePaymentRequest() {
                     type="text"
                     value={qrData.deeplink}
                     readOnly
-                    className="flex-1 px-3 py-2 bg-gray-100 border border-gray-300 rounded text-xs font-mono"
+                    className="flex-1 px-3 py-2 bg-gray-100 border border-gray-300 rounded text-xs font-mono text-black"
                   />
                   <button
                     onClick={() => copyToClipboard(qrData.deeplink)}
