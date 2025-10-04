@@ -28,6 +28,7 @@ export default function MerchantDashboard() {
     message: 'Enter an amount to generate a payment request'
   })
   const [isLoading, setIsLoading] = useState(false)
+  const [qrData, setQrData] = useState<any>(null)
 
   const generatePaymentRequest = async () => {
     if (!amountUSD || parseFloat(amountUSD) <= 0) {
@@ -141,7 +142,7 @@ export default function MerchantDashboard() {
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* New Payment Request Component */}
-                <CreatePaymentRequest />
+                <CreatePaymentRequest onQRGenerated={setQrData} />
 
                 {/* QR Code Display */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
@@ -149,12 +150,12 @@ export default function MerchantDashboard() {
                     Payment QR Code
                   </h2>
                   
-                  {paymentData ? (
+                  {qrData ? (
                     <div className="space-y-4">
                       <div className="flex justify-center">
                         <div className="p-4 bg-white border-2 border-gray-200 rounded-lg">
                           <QRCodeCanvas
-                            value={generateDeeplink(paymentData)}
+                            value={qrData.qrText}
                             size={200}
                             level="M"
                             includeMargin={true}
@@ -165,28 +166,41 @@ export default function MerchantDashboard() {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-600">Amount (USD):</span>
-                          <span className="font-semibold">${paymentData.amountUSD}</span>
+                          <span className="font-semibold">${qrData.usdAmount}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-600">Amount (MON):</span>
-                          <span className="font-semibold">{paymentData.amountMON}</span>
+                          <span className="text-gray-600">Amount (MONAD):</span>
+                          <span className="font-semibold">{qrData.amount}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">Rate:</span>
-                          <span className="font-semibold">${paymentData.priceUSD.toFixed(4)}/MON</span>
+                          <span className="font-semibold">${qrData.rate.toFixed(4)}/MONAD</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">Transaction ID:</span>
-                          <span className="font-mono text-xs">{paymentData.txnId}</span>
+                          <span className="font-mono text-xs">{qrData.txnId}</span>
                         </div>
                       </div>
 
-                      <button
-                        onClick={copyDeeplink}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
-                      >
-                        Copy Deeplink
-                      </button>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Payment Deeplink:
+                        </label>
+                        <div className="flex space-x-2">
+                          <input
+                            type="text"
+                            value={qrData.deeplink}
+                            readOnly
+                            className="flex-1 px-3 py-2 bg-gray-100 border border-gray-300 rounded text-xs font-mono text-black"
+                          />
+                          <button
+                            onClick={() => navigator.clipboard.writeText(qrData.deeplink)}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded transition duration-200"
+                          >
+                            Copy
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     <div className="text-center text-gray-500 py-8">

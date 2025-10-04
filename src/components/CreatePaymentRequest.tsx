@@ -21,7 +21,11 @@ interface QRData {
   timestamp: number
 }
 
-export default function CreatePaymentRequest() {
+interface CreatePaymentRequestProps {
+  onQRGenerated?: (qrData: QRData) => void
+}
+
+export default function CreatePaymentRequest({ onQRGenerated }: CreatePaymentRequestProps) {
   const [usdAmount, setUsdAmount] = useState<string>('')
   const [monAmount, setMonAmount] = useState<number | null>(null)
   const [rate, setRate] = useState<number | null>(null)
@@ -129,6 +133,11 @@ export default function CreatePaymentRequest() {
 
       const qrData: QRData = await response.json()
       setQrData(qrData)
+      
+      // Pass QR data to parent component
+      if (onQRGenerated) {
+        onQRGenerated(qrData)
+      }
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate payment link')
@@ -257,107 +266,20 @@ export default function CreatePaymentRequest() {
           </div>
         )}
 
-        {/* Step 4: Display Results */}
+        {/* Success Message */}
         {qrData && (
-          <div className="space-y-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-blue-800">
-                  Payment Request Generated
-                </h3>
-                {timeLeft !== null && timeLeft > 0 && (
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-blue-600 font-medium">Expires in:</span>
-                    <span className={`text-lg font-bold px-3 py-1 rounded ${
-                      timeLeft <= 10 ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {formatTime(timeLeft)}
-                    </span>
-                  </div>
-                )}
-              </div>
-              
-              {/* QR Code */}
-              <div className="flex justify-center mb-4">
-                <div className={`p-4 bg-white border-2 rounded-lg ${
-                  timeLeft !== null && timeLeft <= 10 ? 'border-red-300' : 'border-gray-200'
-                }`}>
-                  <QRCodeCanvas
-                    value={qrData.qrText}
-                    size={200}
-                    level="M"
-                    includeMargin={true}
-                  />
-                </div>
-              </div>
-
-              {/* Expiry Warning */}
-              {timeLeft !== null && timeLeft <= 10 && timeLeft > 0 && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-                  <div className="flex items-center">
-                    <svg className="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                    <p className="text-red-800 font-medium text-sm">
-                      Payment request expires in {timeLeft} seconds! Generate a new one if needed.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Payment Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
-                <div>
-                  <span className="text-blue-600 font-medium">Transaction ID:</span>
-                  <p className="text-blue-800 font-mono text-xs break-all">{qrData.txnId}</p>
-                </div>
-                <div>
-                  <span className="text-blue-600 font-medium">Recipient:</span>
-                  <p className="text-blue-800 font-mono text-xs break-all">{qrData.recipient}</p>
-                </div>
-                <div>
-                  <span className="text-blue-600 font-medium">Amount (USD):</span>
-                  <p className="text-blue-800 font-semibold">${qrData.usdAmount}</p>
-                </div>
-                <div>
-                  <span className="text-blue-600 font-medium">Amount (MONAD):</span>
-                  <p className="text-blue-800 font-semibold">{qrData.amount} MONAD</p>
-                </div>
-              </div>
-
-              {/* Deeplink */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-blue-700">
-                  Payment Deeplink:
-                </label>
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={qrData.deeplink}
-                    readOnly
-                    className="flex-1 px-3 py-2 bg-gray-100 border border-gray-300 rounded text-xs font-mono text-black"
-                  />
-                  <button
-                    onClick={() => copyToClipboard(qrData.deeplink)}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded transition duration-200"
-                  >
-                    Copy Link
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Reset Button */}
-            <div className="flex justify-center">
-              <button
-                onClick={resetForm}
-                className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition duration-200"
-              >
-                Create New Payment
-              </button>
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <p className="text-green-800 font-medium">
+                Payment request generated successfully! Check the QR code on the right.
+              </p>
             </div>
           </div>
         )}
+
 
         {/* Error Display */}
         {error && (
